@@ -1,0 +1,1 @@
+import {AdminList} from "@/components/admin-list";export default function Page(){return <><h1 className="text-2xl font-bold">Businesses</h1><p className="mt-1 text-white/60">Search and monitor workspace status and subscriptions.</p><AdminList kind="businesses"/></>}

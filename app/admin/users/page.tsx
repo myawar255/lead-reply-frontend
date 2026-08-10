@@ -1,0 +1,1 @@
+import {AdminList} from "@/components/admin-list";export default function Page(){return <><h1 className="text-2xl font-bold">Users</h1><p className="mt-1 text-white/60">Search platform users and verification status.</p><AdminList kind="users"/></>}

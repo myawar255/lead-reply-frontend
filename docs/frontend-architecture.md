@@ -1,33 +1,28 @@
 # LeadReply frontend architecture
 
-## Structure
+## Structure and data flow
 
-The application uses Next.js 16 App Router and TypeScript. Public marketing pages live at the root, authentication routes use the `(auth)` group, customer screens live under `/app`, and the platform shell is isolated under `/admin`. Interactive API-backed screens are client components; public content and route wrappers remain server components.
+LeadReply uses Next.js 16 App Router and TypeScript. Public marketing pages are Server Components, interactive customer/admin screens are focused Client Components, and `/app` and `/admin` have separate shells. The pricing page fetches `/api/public/plans` on the server with a five-minute revalidation window so plan content is present in indexable HTML.
 
-## Laravel integration
+Browser API traffic is centralized in `lib/api/client.ts`; domain modules in `lib/api/` reuse its Sanctum CSRF, credential, validation-error, and `X-Business-UUID` behavior. Authentication tokens are never stored in local storage. The selected business UUID is UI state only and is also submitted through the backend workspace switch endpoint.
 
-`lib/api/client.ts` is the only fetch implementation. `lib/api/index.ts` separates auth, workspace, lead, conversation, and template operations. Types in `lib/types.ts` follow Laravel JSON resources and use public UUIDs only. Browser requests use `credentials: include`, obtain `/sanctum/csrf-cookie` before mutations, send `X-XSRF-TOKEN`, and propagate the selected workspace as `X-Business-UUID`.
+## Supporting API integrations
 
-Laravel remains authoritative for authentication, validation, permission checks, and tenancy. The selected workspace UUID is stored only as a UI convenience; switching is also submitted to Laravel. `proxy.ts` performs early server-side route checks by forwarding the incoming cookie to `/api/auth/me` (or `/api/admin/me`). Client checks handle expired sessions after navigation.
+- `members.ts`: paginated active member directory (`search`, `role_uuid`, `page`) and active assignee discovery. Public member/user UUIDs are identifiers; internal IDs are never consumed.
+- `settings.ts`: explicit workspace GET/PATCH fields (`name`, `legal_name`, `industry`, `country_code`, `timezone`, `locale`, `default_currency`, `website_url`) and acknowledgement fields (`enabled`, `template_uuid`, `sender_name`, `reply_to`). Laravel 422 arrays render beside fields.
+- `plans.ts`: unauthenticated server fetch of the public plan catalogue. Only returned prices, intervals, currencies, trials, enabled features, and limits are rendered.
+- `admin.ts`: current admin identity, overview, businesses, users, integration errors, and system-health monitoring. Admin navigation is permission-filtered and customer authorization is still rejected by Laravel.
 
-## Errors and forms
+Lead assignment loads assignees only on the lead detail screen and refreshes lead data after assignment or unassignment. Email acknowledgement templates come from the existing template API and are restricted client-side to active email templates; Laravel remains authoritative.
 
-`ApiError` normalizes 401, 403, 404, 409, 422, 429, and server failures. Laravel 422 field arrays are exposed to forms. Forms deliberately implement only lightweight native constraints and do not duplicate Laravel validation.
+## Errors, permissions, and security
 
-## Permissions and boundaries
+New screens distinguish loading, empty, normal API failure, field validation, and 403 permission states. Navigation checks improve UX but do not replace backend authorization. Admin/app routes remain noindex. No credentials, provider payloads, security fields, internal bigint IDs, authorization headers, or secret settings are rendered.
 
-Workspace permissions returned by the current business resource hide inaccessible navigation and actions for convenience. The API remains the security boundary. No internal database IDs, bearer tokens, local-storage auth tokens, or secrets are used.
+## Environment and deployment
 
-## Screens
+`NEXT_PUBLIC_API_URL` is the public browser-reachable Laravel origin and is also used by the pricing Server Component. `NEXT_PUBLIC_APP_URL` supplies the canonical frontend origin. Neither variable may contain secrets. Laravel must configure matching Sanctum stateful domains, credentialed CORS, session cookie domain, CSRF origins, and HTTPS settings.
 
-Lead browsing maps filters and pagination to URL query parameters. Lead details use dedicated status, assignment, note, and tag actions and refresh after writes. Conversation lists do not preload histories; detail screens request messages separately and distinguish inbound/outbound plus explicit status text. Template changes create backend versions through the existing endpoint.
+## Backend limitations and deferred work
 
-The backend does not currently expose a tenant member directory, workspace settings update contract, acknowledgement settings contract, public plans, or admin monitoring datasets. Team and Settings document these boundaries instead of inventing behavior. Assignment supports unassigning but cannot safely discover alternate assignees.
-
-## SEO and deployment
-
-Metadata, Open Graph defaults, robots, sitemap, and semantic public pages are included. Auth, app, and admin areas are non-indexable. Deploy with `NEXT_PUBLIC_APP_URL` and `NEXT_PUBLIC_API_URL`; configure Laravel Sanctum stateful domains, session cookie domain, CORS credentials, trusted HTTPS, and matching CSRF origins for the app/API domains.
-
-## Deferred
-
-AI, automation, SMS, WhatsApp, calendar booking, billing, social/CRM integrations, advanced reporting, team mutation, workspace mutation, and full platform monitoring are intentionally deferred.
+The member controller currently always returns active memberships even though its request accepts `status`; the directory therefore presents active users and does not claim invited/suspended filtering. Role options are derived from returned members because no role catalogue endpoint exists. Templates use the existing paginated endpoint and thus select from its returned page. Health data is snapshot-only. Team invitation/removal/role mutation, checkout/billing, impersonation, raw integration diagnostics, AI, automation, SMS, WhatsApp, and advanced reporting remain deferred.

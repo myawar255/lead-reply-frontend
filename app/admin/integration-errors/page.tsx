@@ -1,0 +1,1 @@
+import {AdminList} from "@/components/admin-list";export default function Page(){return <><h1 className="text-2xl font-bold">Integration Errors</h1><p className="mt-1 text-white/60">Sanitized provider failures available to security administrators.</p><AdminList kind="integration-errors"/></>}

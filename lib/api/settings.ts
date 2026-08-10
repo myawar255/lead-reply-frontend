@@ -1,0 +1,3 @@
+import {api} from "./client";
+import type {EmailAcknowledgementSettings,WorkspaceSettings} from "../types";
+export const settings={workspace:()=>api<{data:WorkspaceSettings}>("/api/app/settings/workspace"),updateWorkspace:(value:Partial<WorkspaceSettings>)=>api<{data:WorkspaceSettings}>("/api/app/settings/workspace",{method:"PATCH",body:JSON.stringify(value)}),acknowledgement:()=>api<{data:EmailAcknowledgementSettings}>("/api/app/settings/email-acknowledgement"),updateAcknowledgement:(value:Partial<EmailAcknowledgementSettings>)=>api<{data:EmailAcknowledgementSettings}>("/api/app/settings/email-acknowledgement",{method:"PATCH",body:JSON.stringify(value)})};
