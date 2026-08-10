@@ -1,0 +1,1 @@
+"use client";import {Alert} from "@/components/ui";export default function Error({reset}:{reset:()=>void}){return <Alert>We couldn’t load this screen. <button className="underline" onClick={reset}>Try again</button></Alert>}

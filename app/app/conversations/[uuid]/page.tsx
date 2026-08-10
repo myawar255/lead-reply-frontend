@@ -1,0 +1,1 @@
+import {ConversationDetail} from "@/components/conversation-detail";export default async function Page({params}:{params:Promise<{uuid:string}>}){return <ConversationDetail uuid={(await params).uuid}/>}

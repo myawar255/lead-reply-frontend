@@ -1,0 +1,13 @@
+export type User={uuid:string;name:string;email:string;status:string;email_verified_at:string|null;locale:string;timezone:string};
+export type Business={uuid:string;name:string;slug:string;status:string;timezone:string;locale:string;currency:string;membership:{uuid:string;status:string;role:string;is_primary:boolean};permissions:string[]};
+export type Person={uuid:string;name:string};
+export type Status={uuid:string;name:string;system_name:string;category:string;colour:string;position:number;is_default:boolean;is_closed:boolean;is_won:boolean;is_lost:boolean};
+export type Source={uuid:string;name:string;type:string;is_system:boolean;is_active:boolean};
+export type Tag={uuid:string;name:string;colour:string};
+export type Note={uuid:string;body:string;is_pinned:boolean;author:Person|null;created_at:string};
+export type Activity={uuid:string;type:string;description:string;actor:Person|{type:string};properties:Record<string,unknown>;occurred_at:string};
+export type Lead={uuid:string;name:string|null;first_name:string|null;last_name:string|null;company_name:string|null;email:string|null;phone:string|null;priority:string;qualification_status:string;estimated_value:string|null;currency:string|null;status:Status;source:Source|null;assignee:Person|null;next_follow_up_at:string|null;last_activity_at:string|null;created_at:string;updated_at:string;country_code?:string|null;message?:string|null;tags?:Tag[];notes?:Note[];notes_count?:number;recent_activities?:Activity[];archived_at?:string|null};
+export type Conversation={uuid:string;channel:string;status:string;subject:string|null;lead:{uuid:string;name:string|null;email:string|null}|null;assignee:Person|null;latest_message:{uuid:string;direction:string;preview:string;status:string;created_at:string}|null;last_message_at:string|null;created_at:string;updated_at:string;participants?:{type:string;name:string|null;address:string;role:string}[]};
+export type Message={uuid:string;direction:string;sender:Person|{type:string};subject:string|null;body:string;purpose:string;status:string;is_ai_generated:boolean;queued_at:string|null;sent_at:string|null;delivered_at:string|null;failed_at:string|null;created_at:string};
+export type Template={uuid:string;type:string;name:string;description:string;is_system:boolean;is_active:boolean;latest_version:{version:number;subject:string|null;body:string;variables:string[];published_at:string|null;created_at:string}|null;created_at:string;updated_at:string};
+export type Page<T>={data:T[];links:{first:string|null;last:string|null;prev:string|null;next:string|null};meta:{current_page:number;from:number|null;last_page:number;per_page:number;to:number|null;total:number}};

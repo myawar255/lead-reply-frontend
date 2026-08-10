@@ -1,0 +1,1 @@
+import {Suspense} from "react";import {ConversationsList} from "@/components/conversations-list";import {Spinner} from "@/components/ui";export default function Page(){return <Suspense fallback={<Spinner/>}><ConversationsList/></Suspense>}

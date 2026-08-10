@@ -1,0 +1,1 @@
+import type {MetadataRoute} from "next"; export default function sitemap():MetadataRoute.Sitemap{const b=process.env.NEXT_PUBLIC_APP_URL||"https://app.leadreply.com";return ["","/features","/pricing"].map((p)=>({url:`${b}${p}`,changeFrequency:"monthly" as const,priority:p?0.7:1}))}

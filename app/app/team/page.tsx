@@ -1,0 +1,1 @@
+import {Empty,PageTitle} from "@/components/ui";export default function Page(){return <><PageTitle title="Team" detail="People with access to this workspace."/><Empty title="Team directory unavailable" detail="The current Laravel API exposes your membership and permissions, but not a tenant-safe member list. Invitations and role editing are intentionally not implemented."/></>}
