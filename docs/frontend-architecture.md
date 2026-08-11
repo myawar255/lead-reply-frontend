@@ -6,6 +6,10 @@ LeadReply uses Next.js 16 App Router and TypeScript. Public marketing pages are 
 
 Browser API traffic is centralized in `lib/api/client.ts`; domain modules in `lib/api/` reuse its Sanctum CSRF, credential, validation-error, and `X-Business-UUID` behavior. Authentication tokens are never stored in local storage. The selected business UUID is UI state only and is also submitted through the backend workspace switch endpoint.
 
+The route proxy checks the authenticated user on `/app`, `/login`, `/register`, and `/verify-email`, including verification state. Every `/admin` descendant is checked against `/api/admin/me`. A 401 from any browser API request broadcasts an expiry event that clears the selected workspace and performs a full login navigation.
+
+Tenant screens do not mount until the application shell has verified the selected membership and completed the backend switch. Switching uses a full document replacement after persisting the new UUID, which destroys all tenant-specific React state before Business B renders. A missing, stale, revoked, or inaccessible selection is cleared and routed through workspace selection.
+
 ## Supporting API integrations
 
 - `members.ts`: paginated active member directory (`search`, `role_uuid`, `page`) and active assignee discovery. Public member/user UUIDs are identifiers; internal IDs are never consumed.
@@ -15,9 +19,11 @@ Browser API traffic is centralized in `lib/api/client.ts`; domain modules in `li
 
 Lead assignment loads assignees only on the lead detail screen and refreshes lead data after assignment or unassignment. Email acknowledgement templates come from the existing template API and are restricted client-side to active email templates; Laravel remains authoritative.
 
+Conversation messages are requested in backend chronological order. If the resource spans multiple 100-message pages, all pages are combined in page order. Reply acceptance is labelled queued; sent, delivered, and failed states are rendered only from message resource fields.
+
 ## Errors, permissions, and security
 
-New screens distinguish loading, empty, normal API failure, field validation, and 403 permission states. Navigation checks improve UX but do not replace backend authorization. Admin/app routes remain noindex. No credentials, provider payloads, security fields, internal bigint IDs, authorization headers, or secret settings are rendered.
+Screens distinguish loading, empty, normal API failure, field validation, and 403 permission states. The client maps 401, 403, 404, 409, 422, 429, and 5xx responses without exposing non-JSON response bodies. Navigation checks improve UX but do not replace backend authorization. Admin/app routes remain noindex. No credentials, provider payloads, security fields, internal bigint IDs, authorization headers, or secret settings are rendered.
 
 ## Environment and deployment
 
@@ -25,4 +31,4 @@ New screens distinguish loading, empty, normal API failure, field validation, an
 
 ## Backend limitations and deferred work
 
-The member controller currently always returns active memberships even though its request accepts `status`; the directory therefore presents active users and does not claim invited/suspended filtering. Role options are derived from returned members because no role catalogue endpoint exists. Templates use the existing paginated endpoint and thus select from its returned page. Health data is snapshot-only. Team invitation/removal/role mutation, checkout/billing, impersonation, raw integration diagnostics, AI, automation, SMS, WhatsApp, and advanced reporting remain deferred.
+The member controller currently always returns active memberships even though its request accepts `status`; the directory therefore presents active users and does not claim invited/suspended filtering. Role options are derived from returned members because no role catalogue endpoint exists. The template index is fixed to 50 items and exposes no frontend-controlled page size, so template screens and selectors cannot reach later pages. Laravel verification links currently terminate at a JSON API response; users return to the verification screen and select “I’ve verified my email.” Health data is snapshot-only. Team invitation/removal/role mutation, checkout/billing, impersonation, raw integration diagnostics, AI, automation, SMS, WhatsApp, and advanced reporting remain deferred.

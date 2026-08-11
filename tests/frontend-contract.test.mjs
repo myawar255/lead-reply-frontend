@@ -57,3 +57,28 @@ test("team, pricing, and admin surfaces handle empty and permission states", () 
   assert.doesNotMatch(read("app/admin/page.tsx"), /(mrr|revenue|conversion)/i);
   assert.match(read("app/admin/system-health/page.tsx"), /No health snapshots/);
 });
+
+test("authentication routing covers verification and every admin descendant", () => {
+  const source = read("proxy.ts");
+  assert.match(source, /path\.startsWith\("\/admin"\)/);
+  assert.match(source, /"\/admin\/:path\*"/);
+  assert.match(source, /email_verified_at/);
+  assert.match(source, /redirect\(request,"\/verify-email"\)/);
+  assert.match(read("lib/api/client.ts"), /leadreply:unauthorized/);
+});
+
+test("tenant switching destroys previous workspace client state", () => {
+  const shell = read("components/app-shell.tsx");
+  assert.match(shell, /current\|\|path==="\/app\/select-business"\?children/);
+  assert.match(shell, /window\.location\.replace\("\/app"\)/);
+  assert.match(shell, /localStorage\.removeItem\("leadreply_business_uuid"\)/);
+  assert.doesNotMatch(shell, /router\.push\("\/app"\)/);
+});
+
+test("conversation history consumes pagination and preserves delivery semantics", () => {
+  const source = read("components/conversation-detail.tsx");
+  assert.match(source, /meta\.last_page/);
+  assert.match(source, /queued message/);
+  assert.match(source, /message\.failed_at/);
+  assert.doesNotMatch(source, /queued.*delivered/i);
+});

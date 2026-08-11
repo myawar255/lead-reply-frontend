@@ -1,3 +1,17 @@
 import {NextRequest,NextResponse} from "next/server";
-export async function proxy(request:NextRequest){const protectedRoute=request.nextUrl.pathname.startsWith("/app")||request.nextUrl.pathname==="/admin";const guestRoute=["/login","/register"].includes(request.nextUrl.pathname);if(!protectedRoute&&!guestRoute)return NextResponse.next();const base=process.env.NEXT_PUBLIC_API_URL;if(!base)return protectedRoute?NextResponse.redirect(new URL("/login",request.url)):NextResponse.next();try{const endpoint=request.nextUrl.pathname==="/admin"?"/api/admin/me":"/api/auth/me";const response=await fetch(`${base.replace(/\/$/,"")}${endpoint}`,{headers:{Accept:"application/json",Cookie:request.headers.get("cookie")||""},cache:"no-store"});if(protectedRoute&&!response.ok)return NextResponse.redirect(new URL("/login",request.url));if(guestRoute&&response.ok)return NextResponse.redirect(new URL("/app",request.url))}catch{if(protectedRoute)return NextResponse.redirect(new URL("/login",request.url))}return NextResponse.next()}
-export const config={matcher:["/app/:path*","/admin","/login","/register"]};
+const redirect=(request:NextRequest,path:string)=>NextResponse.redirect(new URL(path,request.url));
+export async function proxy(request:NextRequest){
+ const path=request.nextUrl.pathname,appRoute=path.startsWith("/app"),adminRoute=path.startsWith("/admin"),guestRoute=path==="/login"||path==="/register",verificationRoute=path==="/verify-email";
+ const base=process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/,"");
+ if(!base)return appRoute||adminRoute||verificationRoute?redirect(request,"/login"):NextResponse.next();
+ try{
+  const response=await fetch(`${base}${adminRoute?"/api/admin/me":"/api/auth/me"}`,{headers:{Accept:"application/json",Cookie:request.headers.get("cookie")||""},cache:"no-store"});
+  if(adminRoute)return response.ok?NextResponse.next():redirect(request,"/login");
+  if(!response.ok)return appRoute||verificationRoute?redirect(request,"/login"):NextResponse.next();
+  const body=await response.json() as {user?:{email_verified_at:string|null}},verified=Boolean(body.user?.email_verified_at);
+  if(!verified)return verificationRoute?NextResponse.next():redirect(request,"/verify-email");
+  if(guestRoute||verificationRoute)return redirect(request,"/app");
+  return NextResponse.next();
+ }catch{return appRoute||adminRoute||verificationRoute?redirect(request,"/login"):NextResponse.next()}
+}
+export const config={matcher:["/app/:path*","/admin/:path*","/login","/register","/verify-email"]};
