@@ -34,7 +34,7 @@ test("supporting API modules use exact UUID-based contracts", () => {
   assert.match(read("lib/api/members.ts"), /api\/app\/assignees/);
   assert.match(read("lib/api/settings.ts"), /settings\/workspace/);
   assert.match(read("lib/api/settings.ts"), /settings\/email-acknowledgement/);
-  assert.match(read("components/lead-detail.tsx"), /leads\.assign\(uuid,e\.target\.value\|\|null\)/);
+  assert.match(read("components/lead-detail.tsx"), /leads\.assign\(uuid,event\.target\.value\|\|null\)/);
   assert.match(read("components/lead-detail.tsx"), /await load\(\)/);
 });
 
@@ -81,4 +81,36 @@ test("conversation history consumes pagination and preserves delivery semantics"
   assert.match(source, /queued message/);
   assert.match(source, /message\.failed_at/);
   assert.doesNotMatch(source, /queued.*delivered/i);
+});
+
+test("onboarding checklist uses determinable API-backed completion", () => {
+  const dashboard = read("components/dashboard.tsx");
+  const checklist = read("components/setup-progress.tsx");
+  assert.match(dashboard, /settings\.workspace\(\)/);
+  assert.match(dashboard, /settings\.acknowledgement\(\)/);
+  assert.match(dashboard, /templates\.list\(\)/);
+  assert.match(dashboard, /meta\.total>0/);
+  for (const href of ["/app/settings", "/app/settings/email", "/app/templates", "/app/leads"]) assert.match(checklist, new RegExp(href));
+  assert.match(checklist, /leadreply_onboarding_dismissed_\$\{businessUuid\}/);
+});
+
+test("first-run empty states and template guidance are actionable", () => {
+  assert.match(read("components/leads-list.tsx"), /A lead is a person or organization/);
+  assert.match(read("components/dashboard.tsx"), /Conversations will appear after a lead receives or sends an email/);
+  const templates = read("components/templates-screen.tsx");
+  assert.match(templates, /Create your first email template/);
+  for (const variable of ["lead.first_name", "lead.name", "business.name"]) assert.match(templates, new RegExp(variable.replace(".", "\\.")));
+});
+
+test("onboarding keeps deferred modules out of customer navigation", () => {
+  const navigation = read("components/app-shell.tsx");
+  for (const deferred of ["Automations", "AI", "Billing", "Integrations", "WhatsApp", "SMS"]) assert.doesNotMatch(navigation, new RegExp(`\\[\"${deferred}\",`));
+  assert.match(navigation, /md:hidden/);
+});
+
+test("acknowledgement readiness remains backend-authoritative", () => {
+  const source = read("components/email-settings-screen.tsx");
+  assert.match(source, /Missing email integration readiness will be shown as a validation error/);
+  assert.match(source, /error\?\.errors\.enabled/);
+  assert.doesNotMatch(source, />Ready</);
 });

@@ -21,6 +21,14 @@ Lead assignment loads assignees only on the lead detail screen and refreshes lea
 
 Conversation messages are requested in backend chronological order. If the resource spans multiple 100-message pages, all pages are combined in page order. Reply acceptance is labelled queued; sent, delivered, and failed states are rendered only from message resource fields.
 
+## First-run onboarding
+
+The dashboard setup card is non-blocking and derives completion from existing tenant APIs. Workspace profile completion requires name, industry, country code, timezone, and default currency. Template completion requires an active email template. Acknowledgement completion requires the saved resource to be enabled with a selected template. First-lead completion uses the lead paginator total. First reply is informational because current conversation summaries do not reliably prove that milestone.
+
+Checklist dismissal is a non-sensitive local preference keyed by business UUID. Completion values are never stored locally and are recalculated from Laravel after a fresh tenant mount. The hard-reload tenant switch therefore isolates both API state and onboarding preferences.
+
+The template editor documents only the variables enforced by Laravel: `{{lead.first_name}}`, `{{lead.name}}`, and `{{business.name}}`. Acknowledgement UX reports enabled/disabled configuration and backend validation without inventing readiness state.
+
 ## Errors, permissions, and security
 
 Screens distinguish loading, empty, normal API failure, field validation, and 403 permission states. The client maps 401, 403, 404, 409, 422, 429, and 5xx responses without exposing non-JSON response bodies. Navigation checks improve UX but do not replace backend authorization. Admin/app routes remain noindex. No credentials, provider payloads, security fields, internal bigint IDs, authorization headers, or secret settings are rendered.

@@ -14,6 +14,7 @@ The frontend is ready for full end-to-end MVP testing against a production-like 
 - Communications: paginated conversations, chronological paginated message history, queued replies, delivery-state display, and email templates.
 - Configuration: explicit workspace fields and email acknowledgement fields with Laravel 422 messages.
 - Public/admin: server-rendered public plans and isolated permission-aware monitoring pages.
+- Onboarding: a dismissible dashboard checklist deep-links to existing screens and calculates profile, active-template, saved acknowledgement, and first-lead progress from current workspace APIs.
 
 All authenticated browser calls use `credentials: include`. Mutations initialize CSRF and send the decoded XSRF cookie. Tenant calls propagate `X-Business-UUID`; Laravel remains authoritative for membership, permissions, active business state, and cross-tenant UUID rejection.
 
@@ -22,6 +23,8 @@ All authenticated browser calls use `credentials: include`. Mutations initialize
 Unauthenticated protected routes redirect to login. Authenticated verified users visiting login/register go to the app; unverified users go to verification guidance without a redirect loop. Nested admin routes use `/api/admin/me`. Browser 401 responses clear local workspace state and replace the document with login.
 
 Tenant screens remain unmounted until workspace resolution completes. Stale or revoked selections are removed. A successful switch updates Laravel, saves the returned UUID, and performs a full document replacement, ensuring no prior tenant component state survives.
+
+Onboarding dismissal uses `leadreply_onboarding_dismissed_<business UUID>`. This stores no credentials or completion claims and cannot leak dismissal across workspaces. First-reply progress remains informational because the API exposes no reliable milestone aggregate.
 
 ## Required public environment variables
 
@@ -50,6 +53,7 @@ Laravel production configuration must align `FRONTEND_URL`, Sanctum stateful dom
 - Open empty and long conversations; inspect inbound/outbound direction; queue a manual and template reply; confirm queued is not labelled delivered; then observe sent/delivered/failed updates after refresh.
 - Save valid/invalid workspace and acknowledgement settings; confirm 422 field messages, integration-readiness rejection, success persistence, and refresh persistence.
 - Test team search, role filter, pagination, empty state, and read-only behavior.
+- Test a new workspace checklist at 0%, then complete profile, create an active email template, save accepted acknowledgement settings, and receive a lead; confirm each completion appears only after current API data changes. Dismiss in Business A and verify the checklist remains visible in Business B.
 - Load pricing with empty catalogue, multiple currencies/intervals, limits/trials, and simulated API outage.
 - Test `/admin` and every child route as guest, normal customer, platform viewer, security viewer, and super-admin; verify only returned metrics and sanitized errors appear.
 - Review mobile (approximately 375px), tablet (768px), and desktop (1280px+) navigation, tables, lead detail, conversation composer/messages, settings, team, pricing, and admin screens using keyboard-only navigation and a screen reader smoke test.

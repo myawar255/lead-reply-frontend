@@ -14,6 +14,8 @@ New supporting integrations completed:
 - Separate platform-admin shell with returned overview metrics, filtered/paginated business and user tables, sanitized integration errors, and latest system-health snapshots.
 - Static contract tests covering tenant/CSRF behavior, UUID usage, supported settings fields, permission states, no secrets, dynamic plans, and non-fabricated admin metrics.
 - Production stabilization covering verified-user redirects, nested admin protection, global expired-session handling, stale membership recovery, tenant-state destruction during switching, workspace-resolution fetch gating, complete paginated message history, conversation/dashboard failures, and responsive message composition.
+- Non-blocking, tenant-scoped first-run setup checklist with API-derived profile, template, acknowledgement, and first-lead completion.
+- Purposeful dashboard, lead, conversation, and template empty states; exact template-variable guidance; workspace profile emphasis; acknowledgement configuration summary; and dismissible first-lead workflow guidance.
 
 Known backend limitations: member status is validated but the directory query is active-only; there is no business-role catalogue; no team mutations are exposed; template index pagination is fixed at 50 and later pages cannot be requested; email verification links return JSON instead of redirecting to the frontend; no acknowledgement readiness payload exists beyond PATCH validation; and monitoring exposes snapshots/summaries only.
 
